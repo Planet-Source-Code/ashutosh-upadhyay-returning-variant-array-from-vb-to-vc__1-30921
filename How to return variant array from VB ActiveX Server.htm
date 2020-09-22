@@ -1,0 +1,117 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Microsoft Word 97">
+<TITLE>How to return variant array from VB ActiveX Server</TITLE>
+<TITLE> </TITLE>
+<META NAME="Template" CONTENT="C:\Program Files\Microsoft Office\Templates\Web Pages\Web Page Wizard.wiz">
+</HEAD>
+<BODY LINK="#0000ff" BACKGROUND="Image3.gif">
+
+<B><FONT SIZE=7><P ALIGN="CENTER">How to return variant array from VB ActiveX Server (EXE/DLL) to VC++</P>
+</B></FONT><P ALIGN="CENTER">.</P>
+<P ALIGN="CENTER">Step 1. Make a VB ActiveXDll /EXE project</P>
+<P ALIGN="CENTER">            1.1 - Name your Project and Default Class , We assume Prject name - Project1 and                     Class Name - Class1</P>
+<P ALIGN="CENTER">            1.2  copy and past follwoing function</P>
+<P ALIGN="CENTER">                   public function abc() as Variant</P>
+<P ALIGN="CENTER">                   dim  a(10) as long</P>
+<P ALIGN="CENTER">                   a(0) = 10</P>
+<P ALIGN="CENTER">                 a(1) = 13</P>
+<P ALIGN="CENTER">                   . </P>
+<P ALIGN="CENTER">                  . </P>
+<P ALIGN="CENTER">                 .</P>
+<P ALIGN="CENTER">                 a(10) = 67</P>
+<P ALIGN="CENTER">              end function</P>
+<P ALIGN="CENTER">          1.3     open file menu ,choose make project1.dll/project1.exe  </P>
+<P ALIGN="CENTER">Step 2. Open  A Simple VC++ Project</P>
+<P ALIGN="CENTER">            2.1 choose MFC application(exe),then,dialog application,then,support automation</P>
+<P ALIGN="CENTER">            2.2   choose View -&gt; ClassWizard  -&gt; Automation tab -&gt; Press Add Class -&gt;                   choose From a type library</P>
+<P ALIGN="CENTER">           2.3 allow   MFC to  generate wrapper classes for your VB server. We assume name                  of Wrapper  class genrated by MFC is _Class1</P>
+<P ALIGN="CENTER">            2.4 in your dialog class (  in ..dlg.h file) , make a variable of your wrapper class</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">                     class YourApplictionDlg : public CDialog</P>
+<P ALIGN="CENTER">                       {</P>
+<P ALIGN="CENTER">                        ..........</P>
+<P ALIGN="CENTER">                     ............</P>
+<P ALIGN="CENTER">                     public :</P>
+<P ALIGN="CENTER">                        _Class1 ashu;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">                     ...............</P>
+<P ALIGN="CENTER">                    ................</P>
+<P ALIGN="CENTER">                     ............</P>
+<P ALIGN="CENTER">                        };</P>
+<P ALIGN="CENTER"> </P>
+<P ALIGN="CENTER">                 2.5  open  Oninitdialog() function of your dialog (dlg)  class and copy following                            code in the end of function</P>
+<P ALIGN="CENTER">                        // TODO: Add extra initialization here</P>
+<P ALIGN="CENTER">                        ashu.CreateDispatch("Project1.Class1");</P>
+<P ALIGN="CENTER">                       return TRUE;</P>
+<P ALIGN="CENTER">                2.6    To retrieve the values of array of VB server write followoing code </P>
+<P ALIGN="CENTER">                          in a function, for example in OnOK()</P>
+<P ALIGN="CENTER">void .......Dlg::OnOK() {</P>
+<P ALIGN="CENTER">   VARIANT v;</P>
+<P ALIGN="CENTER"> v = ashu.abc();</P>
+<P ALIGN="CENTER"> </P>
+<P ALIGN="CENTER"> SAFEARRAY *parray;</P>
+<P ALIGN="CENTER"> parray = v.parray;</P>
+<P ALIGN="CENTER"> </P>
+<P ALIGN="CENTER">short sElem;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">long lLb, lUb, l;</P>
+<P ALIGN="CENTER">long  lResult[10];</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">if (parray == NULL){ // array has not been initialized</P>
+<P ALIGN="CENTER">MessageBox("NULL");</P>
+<P ALIGN="CENTER">return;</P>
+<P ALIGN="CENTER">}</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">if ((parray)-&gt;cDims != 1) {// check number of dimensions</P>
+<P ALIGN="CENTER"> MessageBox("Dim &lt;&gt; 1");</P>
+<P ALIGN="CENTER">TRACE("%d\n",parray-&gt;cDims);</P>
+<P ALIGN="CENTER">return ;</P>
+<P ALIGN="CENTER">}</P>
+<P ALIGN="CENTER">TRACE("%d\n",parray-&gt;cDims);</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">// get the upper and lower bounds of the array</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">if (FAILED(SafeArrayGetLBound(parray, 1, &amp;lLb)) ||</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&#9;FAILED(SafeArrayGetUBound(parray, 1, &amp;lUb))){</P>
+<P ALIGN="CENTER"> MessageBox("Array Bound Failed");</P>
+<P ALIGN="CENTER">return ;</P>
+<P ALIGN="CENTER">}</P>
+<P ALIGN="CENTER">TRACE(" %d %d\n",lLb,lUb);</P>
+<P ALIGN="CENTER">// loop through the array and put the elements into array lResult</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">int i=0;</P>
+<P ALIGN="CENTER">for (l = lLb; l &lt;= lUb; l++) { </P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&#9;if (FAILED(SafeArrayGetElement(parray, &amp;l, &amp;sElem))){</P>
+<P ALIGN="CENTER">MessageBox("Element failed");</P>
+<P ALIGN="CENTER">return ; }</P>
+<P ALIGN="CENTER">TRACE("%d \n",sElem);</P>
+<P ALIGN="CENTER">lResult[i++] = sElem;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">} </P>
+<P ALIGN="CENTER"> /////  You can display  array in message box</P>
+<P ALIGN="CENTER">///// To display</P>
+<P ALIGN="CENTER">  CString s;</P>
+<P ALIGN="CENTER">  s.Format("%d  %d   %d  .....      %d", lResult[0],lResult[1],..........,lResult[lUb]);</P>
+<P ALIGN="CENTER">Messagebox(s);</P>
+<P ALIGN="CENTER">///////////// delete CDialog::OnOk()</P>
+<P ALIGN="CENTER">}</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">/////////////////</P>
+<P ALIGN="CENTER">               2.7   Now in your dialog class OnClose or OnCancel  function copy following       </P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">                          ashu.DetachDispatch();</P>
+<P ALIGN="CENTER">&#9;        ashu.ReleaseDispatch();                  </P>
+<P ALIGN="CENTER">               2.8 build your program  and run.  you may add &lt;afxole.h&gt; header file in your     _Class1.h file, if any problem in building.</P>
+<P>  For  More Help Searh in MSDN  &quot;Using Dll from Visual basic" or see article -- cahpter7 in Volume 2 of the <I>OLE 2 Programmer's Reference</P>
+</I><P ALIGN="CENTER">                 </P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER"><IMG SRC="Image4.gif" WIDTH=536 HEIGHT=5></P></BODY>
+</HTML>
